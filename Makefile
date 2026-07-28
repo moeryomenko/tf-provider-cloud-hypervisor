@@ -3,8 +3,6 @@ IMPORT_PATH = github.com/moeryomenko/tf-provider-cloud-hypervisor
 # Version can be overridden
 VERSION ?= dev
 CACHE_DIR ?= .cache
-TOOLS_DIR ?= tools
-TOOLS_BIN_DIR ?= $(CACHE_DIR)/tools
 CH_TEST_KERNEL ?= $(CACHE_DIR)/vmlinux
 CH_TEST_INITRD ?= $(CACHE_DIR)/initrd.img
 CH_KERNEL_URL ?= https://cloud-hypervisor.azureedge.net/pub/ci-master/head/vmlinux
@@ -16,7 +14,7 @@ LDFLAGS := -ldflags "-X main.version=$(VERSION)"
 # Default target
 .DEFAULT_GOAL := help
 
-.PHONY: help build test testacc lint fmt clean sweep testdeps-acc
+.PHONY: help build test testacc lint fmt tidy vet clean sweep testdeps-acc check
 
 help: ## Display this help message
 	@echo "Terraform Provider Cloud-Hypervisor - Available targets:"
@@ -24,28 +22,35 @@ help: ## Display this help message
 
 build: ## Build the provider binary
 	@echo "Building terraform-provider-cloud-hypervisor..."
-	@GOWORK=off go build $(LDFLAGS) -o terraform-provider-cloud-hypervisor
+	@go build -trimpath $(LDFLAGS) -o terraform-provider-cloud-hypervisor .
 
 test: ## Run unit tests with coverage (serialized to avoid temp-file races in chproc tests)
 	@echo "Running unit tests..."
-	@GOWORK=off go test -p=1 -count=1 ./... -coverprofile=coverage.out
+	@go test -p=1 -count=1 ./... -coverprofile=coverage.out
 
 testacc: ## Run acceptance tests (requires running Cloud-Hypervisor)
 	@echo "Running acceptance tests..."
-	@TF_ACC=1 GOWORK=off go test -count=1 -timeout 30m ./internal/provider/
+	@TF_ACC=1 go test -count=1 -timeout 30m ./internal/provider/
 
-lint: $(TOOLS_BIN_DIR)/golangci-lint ## Run golangci-lint
+lint: ## Run golangci-lint
 	@echo "Running golangci-lint..."
-	@GOWORK=off $(TOOLS_BIN_DIR)/golangci-lint run --fix ./...
+	@go tool golangci-lint run --fix ./...
 
-fmt: ## Format code with gofmt (basic fallback for initial scaffolding)
-	@echo "Formatting code..."
-	@gofmt -w -s .
+fmt: ## Format Go source files
+	@gofmt -s -w .
+	@git status --short | grep '[A|M]' | grep -E -o "[^ ]*$$" | grep '\.go$$' | xargs -I{} go tool golines --base-formatter=gofumpt --ignore-generated --tab-len=1 --max-len=120 -w {}
+	@git status --short | grep '[A|M]' | grep -E -o "[^ ]*$$" | grep '\.go$$' | xargs -I{} go tool goimports -local $(IMPORT_PATH) -w {}
+
+tidy: ## Tidy go module dependencies
+	@go mod tidy -v
+
+vet: ## Run go vet
+	@go vet ./...
 
 clean: ## Clean build artifacts
 	@echo "Cleaning..."
-	@rm -f terraform-provider-cloud-hypervisor
-	@GOWORK=off go clean
+	@rm -f terraform-provider-cloud-hypervisor coverage.out
+	@go clean
 
 testdeps-acc: ## Download acceptance test kernel+initrd fixtures to .cache/
 	@echo "Preparing acceptance test dependencies..."
@@ -72,8 +77,6 @@ testdeps-acc: ## Download acceptance test kernel+initrd fixtures to .cache/
 
 sweep: ## Clean up leaked test resources (requires resource.TestMain in test files)
 	@echo "Running sweepers..."
-	@GOWORK=off go test -sweep= ./internal/provider/ -timeout 10m
+	@TF_ACC= go test -sweep= ./internal/provider/ -timeout 10m
 
-$(TOOLS_BIN_DIR)/golangci-lint: $(TOOLS_DIR)/go.mod
-	@mkdir -p $(TOOLS_BIN_DIR)
-	@cd $(TOOLS_DIR) && go build -o ../$(TOOLS_BIN_DIR)/golangci-lint github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+check: lint vet test ## Run lint, vet, and tests (CI gate)

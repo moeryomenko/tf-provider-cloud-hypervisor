@@ -4,3 +4,5 @@ use (
 	.
 	./tools
 )
+
+replace google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd => google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
