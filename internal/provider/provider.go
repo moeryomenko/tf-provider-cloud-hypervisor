@@ -147,6 +147,7 @@ func (p *cloudhypervisorProvider) Resources(_ context.Context) []func() resource
 	return []func() resource.Resource{
 		NewVMResource,
 		NewDiskResource,
+		NewNetResource,
 	}
 }
 
