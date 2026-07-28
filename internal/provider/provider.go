@@ -144,7 +144,9 @@ func (p *cloudhypervisorProvider) Configure(ctx context.Context, req provider.Co
 }
 
 func (p *cloudhypervisorProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		NewVMResource,
+	}
 }
 
 func (p *cloudhypervisorProvider) DataSources(_ context.Context) []func() datasource.DataSource {
