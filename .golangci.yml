@@ -1,0 +1,32 @@
+version: "2"
+linters:
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Test helper symbols like testAccProtoV6ProviderFactories are intentionally
+      # defined for future acceptance tests before they are used.
+      - linters:
+          - unused
+          - errcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/moeryomenko/tf-provider-cloud-hypervisor
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

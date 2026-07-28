@@ -1,0 +1,39 @@
+# Binaries
+terraform-provider-cloud-hypervisor
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+*.out
+
+# Coverage
+coverage.out
+
+# Cache
+.cache/
+
+# Go workspace (committed — includes tools module)
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
