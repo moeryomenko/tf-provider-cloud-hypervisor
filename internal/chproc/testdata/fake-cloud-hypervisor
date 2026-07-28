@@ -1,0 +1,141 @@
+#!/bin/bash
+# fake-cloud-hypervisor — test double for the Cloud-Hypervisor VMM binary.
+#
+# Accepts the same --api-socket-path flag as real CH and creates a listening
+# Unix socket (or optionally simulates failure conditions).
+#
+# Usage:
+#   fake-cloud-hypervisor --api-socket-path <path> [options]
+#
+# Options:
+#   --api-socket-path <path>  Required. Path for the Unix domain socket.
+#   --delay <n>               Sleep n seconds before creating the socket (default: 0).
+#   --no-socket               Do not create a socket — sleep indefinitely (timeout test).
+#   --exit-on-start           Exit immediately after processing flags.
+#   --exit-code <n>           Exit code when --exit-on-start is set (default: 1).
+#   --stderr-msg <msg>        Write msg to stderr before exiting (with --exit-on-start).
+#   --help, -h                Show this message and exit.
+set -Eeuo pipefail
+
+API_SOCKET_PATH=""
+DELAY=0
+NO_SOCKET=false
+EXIT_ON_START=false
+EXIT_CODE=1
+STDERR_MSG=""
+
+# ---- Parse arguments ----
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --api-socket-path)
+            API_SOCKET_PATH="${2:?--api-socket-path requires a value}"
+            shift 2
+            ;;
+        --delay)
+            DELAY="${2:?--delay requires a value}"
+            shift 2
+            ;;
+        --no-socket)
+            NO_SOCKET=true
+            shift
+            ;;
+        --exit-on-start)
+            EXIT_ON_START=true
+            shift
+            ;;
+        --exit-code)
+            EXIT_CODE="${2:?--exit-code requires a value}"
+            shift 2
+            ;;
+        --stderr-msg)
+            STDERR_MSG="${2:?--stderr-msg requires a value}"
+            shift 2
+            # Collect subsequent non-flag args as part of the message,
+            # so multi-word messages (e.g. "FAIL: invalid configuration")
+            # work even when unquoted in a wrapper shell script.
+            while [[ $# -gt 0 && ! "$1" =~ ^-- ]]; do
+                STDERR_MSG="$STDERR_MSG $1"
+                shift
+            done
+            ;;
+        --help|-h)
+            cat <<'EOF'
+fake-cloud-hypervisor — test double for the Cloud-Hypervisor VMM binary.
+
+Usage:
+  fake-cloud-hypervisor --api-socket-path <path> [options]
+
+Options:
+  --api-socket-path <path>  Required. Path for the Unix domain socket.
+  --delay <n>               Sleep n seconds before creating the socket (default: 0).
+  --no-socket               Do not create a socket — sleep indefinitely (timeout test).
+  --exit-on-start           Exit immediately after processing flags.
+  --exit-code <n>           Exit code when --exit-on-start is set (default: 1).
+  --stderr-msg <msg>        Write msg to stderr before exiting (with --exit-on-start).
+  --help, -h                Show this message and exit.
+EOF
+            exit 0
+            ;;
+        *)
+            echo "ERROR: Unknown option: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# ---- Required arg check ----
+if [[ -z "$API_SOCKET_PATH" ]]; then
+    echo "ERROR: --api-socket-path is required" >&2
+    exit 1
+fi
+
+# ---- Exit-on-start mode: simulate crashed binary ----
+if [[ "$EXIT_ON_START" == "true" ]]; then
+    if [[ -n "$STDERR_MSG" ]]; then
+        echo "$STDERR_MSG" >&2
+    fi
+    exit "$EXIT_CODE"
+fi
+
+# ---- Create socket directory ----
+mkdir -p "$(dirname "$API_SOCKET_PATH")"
+
+# ---- Optional delay before socket creation ----
+if (( DELAY > 0 )); then
+    sleep "$DELAY"
+fi
+
+# ---- Create listening Unix socket ----
+if [[ "$NO_SOCKET" != "true" ]]; then
+    # Prefer socat (widely available on Linux CI), fallback to others.
+    if command -v socat &>/dev/null; then
+        socat UNIX-LISTEN:"$API_SOCKET_PATH",fork,unlink-early EXEC:"cat" &
+    elif command -v nc &>/dev/null && nc -h 2>&1 | grep -q -- '-U'; then
+        nc -U -l "$API_SOCKET_PATH" &
+    elif command -v python3 &>/dev/null; then
+        python3 -c "
+import socket, os, sys, time
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+try:
+    os.unlink(sys.argv[1])
+except OSError:
+    pass
+s.bind(sys.argv[1])
+s.listen(5)
+while True:
+    time.sleep(1)
+" "$API_SOCKET_PATH" &
+    else
+        # Pure fallback: just touch the file — dial will fail, but stat succeeds.
+        # Tests that need a reachable socket need socat/nc/python.
+        touch "$API_SOCKET_PATH"
+    fi
+fi
+
+# ---- Clean exit on SIGTERM ----
+trap 'exit 0' SIGTERM SIGINT
+
+# ---- Sleep until killed ----
+while true; do
+    sleep 1
+done
