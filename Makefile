@@ -24,9 +24,9 @@ build: ## Build the provider binary
 	@echo "Building terraform-provider-cloud-hypervisor..."
 	@go build -trimpath $(LDFLAGS) -o terraform-provider-cloud-hypervisor .
 
-test: ## Run unit tests with coverage (serialized to avoid temp-file races in chproc tests)
-	@echo "Running unit tests..."
-	@go test -p=1 -count=1 ./... -coverprofile=coverage.out
+test: ## Run all tests
+	@go tool gotestsum --format-hide-empty-pkg -f testname -- -p=1 -vet=off -count=1 -timeout=1200s -coverprofile=coverage.out ./...
+	@go tool cover -func=coverage.out | grep ^total
 
 testacc: ## Run acceptance tests (requires running Cloud-Hypervisor)
 	@echo "Running acceptance tests..."
