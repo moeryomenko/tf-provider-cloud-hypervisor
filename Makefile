@@ -21,8 +21,8 @@ help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 build: ## Build the provider binary
-	@echo "Building terraform-provider-cloud-hypervisor..."
-	@go build -trimpath $(LDFLAGS) -o terraform-provider-cloud-hypervisor .
+	@echo "Building tf-provider-cloud-hypervisor..."
+	@go build -trimpath $(LDFLAGS) -o tf-provider-cloud-hypervisor .
 
 test: ## Run all tests
 	@go tool gotestsum --format-hide-empty-pkg -f testname -- -p=1 -vet=off -count=1 -timeout=1200s -coverprofile=coverage.out ./...
@@ -49,7 +49,7 @@ vet: ## Run go vet
 
 clean: ## Clean build artifacts
 	@echo "Cleaning..."
-	@rm -f terraform-provider-cloud-hypervisor coverage.out
+	@rm -f tf-provider-cloud-hypervisor coverage.out
 	@go clean
 
 testdeps-acc: ## Download acceptance test kernel+initrd fixtures to .cache/

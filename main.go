@@ -1,4 +1,4 @@
-// Package main is the entry point for the terraform-provider-cloud-hypervisor binary.
+// Package main is the entry point for the tf-provider-cloud-hypervisor binary.
 package main
 
 import (

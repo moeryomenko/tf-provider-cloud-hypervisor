@@ -1,5 +1,5 @@
 # Binaries
-terraform-provider-cloud-hypervisor
+tf-provider-cloud-hypervisor
 *.exe
 *.dll
 *.so
