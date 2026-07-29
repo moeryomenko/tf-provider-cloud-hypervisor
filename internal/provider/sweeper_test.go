@@ -156,29 +156,42 @@ func killProcess(pid int, socketDir string) error {
 }
 
 // extractSocketDir parses the process cmdline (with NUL bytes replaced by
-// spaces) for the --api-socket-path argument and returns the parent
-// directory of the socket file.
+// spaces) for the --api-socket or --api-socket-path argument and returns the
+// parent directory of the socket file.
 //
-// Example cmdline input (after NUL replacement):
+// Examples (after NUL replacement):
 //
 //	"cloud-hypervisor --api-socket-path /tmp/ch-tf-abc123/api.sock"
+//	"cloud-hypervisor --api-socket path=/tmp/ch-tf-abc123/api.sock"
 //
 // Returns: "/tmp/ch-tf-abc123"
 func extractSocketDir(cmdline string) string {
-	// Split on the flag name. The value appears in the next token.
-	parts := strings.Split(cmdline, "--api-socket-path")
-	if len(parts) < 2 {
+	// Try --api-socket first (new format: --api-socket path=<path>)
+	if idx := strings.Index(cmdline, "--api-socket"); idx >= 0 {
+		after := cmdline[idx+len("--api-socket"):]
+		after = strings.TrimSpace(after)
+		// Could be "--api-socket-path" or "--api-socket path=..."
+		if strings.HasPrefix(after, "-path") {
+			after = strings.TrimSpace(after[len("-path"):])
+		} else if strings.HasPrefix(after, "path=") {
+			after = strings.TrimPrefix(after, "path=")
+			// Value is everything up to next space.
+			if space := strings.IndexAny(after, " \t"); space >= 0 {
+				after = after[:space]
+			}
+			return filepath.Dir(after)
+		}
+		// Old format: --api-socket-path /path/to/api.sock
+		// (also reached via the --api-socket -path fallthrough above)
+		// The value follows the flag, possibly after whitespace.
+		after = strings.TrimSpace(after)
+		fields := strings.Fields(after)
+		if len(fields) > 0 {
+			return filepath.Dir(fields[0])
+		}
 		return ""
 	}
-
-	// The value follows the flag, possibly after whitespace.
-	rest := strings.TrimSpace(parts[1])
-	fields := strings.Fields(rest)
-	if len(fields) == 0 {
-		return ""
-	}
-
-	return filepath.Dir(fields[0])
+	return ""
 }
 
 // isTestDir returns true if the directory path contains the test prefix

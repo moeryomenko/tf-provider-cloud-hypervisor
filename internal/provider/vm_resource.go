@@ -252,6 +252,15 @@ func (r *vmResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *r
 						"serial":           schema.StringAttribute{Optional: true},
 						"rate_limit_group": schema.StringAttribute{Optional: true},
 						"backing_files":    schema.BoolAttribute{Optional: true},
+						"queue_affinity": schema.ListNestedAttribute{
+							Optional: true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"queue_index": schema.Int64Attribute{Optional: true},
+									"host_cpus":   schema.ListAttribute{Optional: true, ElementType: types.Int64Type},
+								},
+							},
+						},
 						"sparse":           schema.BoolAttribute{Optional: true},
 						"image_type":       schema.StringAttribute{Optional: true},
 						"lock_granularity": schema.StringAttribute{Optional: true},
