@@ -1,0 +1,52 @@
+# =============================================================================
+# Example terraform.tfvars — VM with Cloud-Init
+#
+# Copy this file to terraform.tfvars and adjust paths for your environment.
+#
+# Preparation steps:
+#
+# 1. Download and convert the Ubuntu cloud image:
+#    wget https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+#    qemu-img convert -f qcow2 -O raw noble-server-cloudimg-amd64.img \
+#      /home/user/images/ubuntu-noble.raw
+#
+# 2. Download the firmware binary:
+#    wget -O /home/user/firmware/hypervisor-fw \
+#      https://github.com/cloud-hypervisor/rust-hypervisor-firmware/releases/.../hypervisor-fw
+#    chmod +x /home/user/firmware/hypervisor-fw
+#
+# 3. Create the cloud-init disk image from cloud-init/ directory:
+#    cd examples/vm-cloudinit
+#    ./create-cloud-init.sh -o /tmp/ubuntu-cloudinit.img
+#
+# 4. Create the tap device (requires root):
+#    sudo ip tuntap add chtap0 mode tap
+#    sudo ip link set chtap0 up
+#
+# 5. (Optional) Give cloud-hypervisor cap_net_admin so it can create tap devices:
+#    sudo setcap cap_net_admin+ep $(which cloud-hypervisor)
+# =============================================================================
+
+# Required: path to hypervisor-fw or CLOUDHV.fd binary
+firmware_path = "/home/user/firmware/hypervisor-fw"
+
+# Required: path to the raw cloud image (converted from qcow2)
+os_disk_path = "/home/user/images/ubuntu-noble.raw"
+
+# Optional: path to cloud-init FAT disk image
+# Must run create-cloud-init.sh before terraform apply
+cloudinit_disk_path = "/tmp/ubuntu-cloudinit.img"
+
+# Optional: CPU configuration
+vcpus     = 2
+max_vcpus = 4
+
+# Optional: memory size in bytes (2 GiB)
+memory_size_bytes = 2147483648
+
+# Optional: network configuration
+tap_device_name    = "chtap0"
+guest_mac_address  = "12:34:56:78:90:ab"
+
+# Optional: serial console log
+serial_log_path = "/tmp/ch-cloudinit-serial.log"
