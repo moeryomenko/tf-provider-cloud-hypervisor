@@ -103,7 +103,7 @@ func (m *Manager) Start(ctx context.Context) (socketPath string, err error) {
 	socketPath = filepath.Join(dir, "api.sock")
 	m.socketPath = socketPath
 
-	cmd := exec.Command(binaryPath, "--api-socket-path", socketPath)
+	cmd := exec.Command(binaryPath, "--api-socket", "path="+socketPath)
 	m.cmd = cmd
 
 	stderrPipe, err := cmd.StderrPipe()
