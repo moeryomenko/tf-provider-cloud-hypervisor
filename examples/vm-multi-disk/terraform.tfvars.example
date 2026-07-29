@@ -1,0 +1,41 @@
+# ==============================================================================
+# vm-multi-disk — Example variable values
+# ==============================================================================
+#
+# Preparation steps:
+#
+#   1. Build a Linux kernel with PVH support:
+#      git clone https://github.com/cloud-hypervisor/linux.git -b ch-6.12
+#      cd linux
+#      make CH_TARGET_DIR=/path/to/kernel-build defconfig
+#      make -j$(nproc)
+#      # The resulting vmlinux binary is at /path/to/kernel-build/vmlinux
+#
+#   2. Create the OS root disk (from a cloud image):
+#      qemu-img convert -p -O raw /path/to/ubuntu-24.04-server-cloudimg-amd64.img \
+#        /var/lib/ch/vms/multi-disk/os.img
+#
+#   3. Create the data disk (raw, unformatted):
+#      mkdir -p /var/lib/ch/vms/multi-disk
+#      truncate -s 10G /var/lib/ch/vms/multi-disk/data.img
+#      # NOTE: Format inside the VM after boot:
+#      #   mkfs.ext4 /dev/vdb
+#
+#   4. Create a TAP device:
+#      sudo ip tuntap add name ch-multi-disk mode tap
+#      sudo ip link set ch-multi-disk up
+#
+#   5. Copy and rename this file to terraform.tfvars, then edit the paths.
+# ==============================================================================
+
+kernel_path        = "/var/lib/ch/vms/multi-disk/vmlinux"
+initrd_path        = "/var/lib/ch/vms/multi-disk/initrd.img"
+kernel_cmdline     = "console=ttyS0 root=/dev/vda1 rw"
+os_disk_path       = "/var/lib/ch/vms/multi-disk/os.img"
+data_disk_path     = "/var/lib/ch/vms/multi-disk/data.img"
+vcpus              = 2
+max_vcpus          = 4
+memory_size_bytes  = 2147483648
+tap_device_name    = "ch-multi-disk"
+guest_mac_address  = "de:ad:be:ef:00:02"
+serial_log_path    = "/var/lib/ch/vms/multi-disk/serial.log"
