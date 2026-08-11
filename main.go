@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/community/cloudhypervisor",
+		Address: "github.com/moeryomenko/tf-provider-cloud-hypervisor",
 		Debug:   debug,
 	}
 

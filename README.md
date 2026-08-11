@@ -22,7 +22,7 @@ The provider can either manage the Cloud-Hypervisor process automatically (start
 terraform {
   required_providers {
     cloudhypervisor = {
-      source = "registry.terraform.io/community/cloudhypervisor"
+      source = "github.com/moeryomenko/tf-provider-cloud-hypervisor"
     }
   }
 }
@@ -113,11 +113,13 @@ To use the locally-built provider, add a dev override to `~/.terraformrc`:
 ```hcl
 provider_installation {
   dev_overrides {
-    "registry.terraform.io/community/cloudhypervisor" = "/path/to/tf-provider-cloud-hypervisor"
+    "github.com/moeryomenko/tf-provider-cloud-hypervisor" = "/path/to/tf-provider-cloud-hypervisor"
   }
   direct {}
 }
 ```
+
+Note: this GitHub address is for local/dev use only via `dev_overrides` — the provider is not published to the Terraform Registry, so `terraform init` will not install it from a registry.
 
 ### Running tests
 

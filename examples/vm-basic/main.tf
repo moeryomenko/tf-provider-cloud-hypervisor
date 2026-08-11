@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     cloudhypervisor = {
-      source = "registry.terraform.io/community/cloudhypervisor"
+      source = "github.com/moeryomenko/tf-provider-cloud-hypervisor"
     }
   }
 }
@@ -15,18 +15,18 @@ provider "cloudhypervisor" {
 # CH_TEST_KERNEL=/path/to/vmlinux CH_TEST_INITRD=/path/to/initrd
 resource "cloudhypervisor_vm" "basic" {
   payload = {
-    kernel   = var.kernel_path
+    kernel    = var.kernel_path
     initramfs = var.initrd_path
-    cmdline  = "console=ttyS0 root=/dev/vda1 rw"
+    cmdline   = "console=ttyS0 root=/dev/vda1 rw"
   }
 }
 
 variable "kernel_path" {
   description = "Path to Linux kernel binary"
-  type = string
+  type        = string
 }
 
 variable "initrd_path" {
   description = "Path to initrd image"
-  type = string
+  type        = string
 }

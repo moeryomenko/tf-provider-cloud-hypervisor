@@ -18,7 +18,7 @@
 terraform {
   required_providers {
     cloudhypervisor = {
-      source = "registry.terraform.io/community/cloudhypervisor"
+      source = "github.com/moeryomenko/tf-provider-cloud-hypervisor"
     }
   }
 }
@@ -32,9 +32,9 @@ provider "cloudhypervisor" {
 
 resource "cloudhypervisor_vm" "multi_disk_vm" {
   payload = {
-    kernel   = var.kernel_path
+    kernel    = var.kernel_path
     initramfs = var.initrd_path
-    cmdline  = var.kernel_cmdline
+    cmdline   = var.kernel_cmdline
   }
 
   cpus = {
@@ -43,7 +43,7 @@ resource "cloudhypervisor_vm" "multi_disk_vm" {
   }
 
   memory = {
-    size = var.memory_size_bytes  # bytes (not MiB)
+    size = var.memory_size_bytes # bytes (not MiB)
   }
 
   # OS disk — appears as /dev/vda in the guest

@@ -30,7 +30,7 @@
 terraform {
   required_providers {
     cloudhypervisor = {
-      source = "registry.terraform.io/community/cloudhypervisor"
+      source = "github.com/moeryomenko/tf-provider-cloud-hypervisor"
     }
   }
 }

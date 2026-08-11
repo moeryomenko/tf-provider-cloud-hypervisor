@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     cloudhypervisor = {
-      source = "registry.terraform.io/community/cloudhypervisor"
+      source = "github.com/moeryomenko/tf-provider-cloud-hypervisor"
     }
   }
 }
@@ -22,9 +22,9 @@ provider "cloudhypervisor" {
 # -----------------------------------------------------------------------------
 resource "cloudhypervisor_vm" "full" {
   payload = {
-    kernel   = var.kernel_path
+    kernel    = var.kernel_path
     initramfs = var.initrd_path
-    cmdline  = "console=ttyS0 root=/dev/vda1 rw"
+    cmdline   = "console=ttyS0 root=/dev/vda1 rw"
   }
 
   cpus = {
@@ -36,13 +36,13 @@ resource "cloudhypervisor_vm" "full" {
       dies_per_package = 1
       packages         = 1
     }
-    kvm_hyperv  = true
+    kvm_hyperv    = true
     max_phys_bits = 40
   }
 
   memory = {
-    size         = 2147483648  # 2 GiB
-    hotplug_size = 4294967296  # 4 GiB max
+    size         = 2147483648 # 2 GiB
+    hotplug_size = 4294967296 # 4 GiB max
   }
 
   # Serial console output to a file
@@ -66,8 +66,8 @@ resource "cloudhypervisor_vm" "full" {
 
   # Balloon device for memory management
   balloon = {
-    size               = 1073741824  # 1 GiB balloon
-    deflate_on_oom     = true
+    size                = 1073741824 # 1 GiB balloon
+    deflate_on_oom      = true
     free_page_reporting = true
   }
 
@@ -109,13 +109,13 @@ resource "cloudhypervisor_vm" "full" {
   # Create-time inline disks (use cloudhypervisor_disk for hotplug)
   disks = [
     {
-      path     = "/var/lib/ch/vms/full/rootfs.img"
-      readonly = false
-      direct   = true
-      iommu    = false
+      path       = "/var/lib/ch/vms/full/rootfs.img"
+      readonly   = false
+      direct     = true
+      iommu      = false
       num_queues = 1
-      id       = "rootfs"
-      sparse   = false
+      id         = "rootfs"
+      sparse     = false
     },
   ]
 
@@ -177,10 +177,10 @@ resource "cloudhypervisor_vm" "full" {
 
 variable "kernel_path" {
   description = "Path to Linux kernel binary"
-  type = string
+  type        = string
 }
 
 variable "initrd_path" {
   description = "Path to initrd image"
-  type = string
+  type        = string
 }
